@@ -34,3 +34,5 @@ git lfs track "*.prefab"
 git lfs track "*.hdr"
 git lfs track "*.exr"
 
+#More if needed
+
