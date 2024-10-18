@@ -1,2 +1,36 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# 3D Models
+git lfs track "*.fbx"
+git lfs track "*.obj"
+git lfs track "*.blend"
+
+# Textures & Materials
+git lfs track "*.png"
+git lfs track "*.jpg"
+git lfs track "*.tga"
+git lfs track "*.mat"
+git lfs track "*.shader"
+git lfs track "*.asset"
+
+# Animations & Rigging
+git lfs track "*.anim"
+git lfs track "*.bvh"
+
+# SFX
+git lfs track "*.wav"
+git lfs track "*.mp3"
+git lfs track "*.ogg"
+
+# Videos
+git lfs track "*.mp4"
+git lfs track "*.avi"
+
+# Large Files Unity
+git lfs track "*.unitypackage"
+git lfs track "*.prefab"
+
+# Heigh Resolution Files
+git lfs track "*.hdr"
+git lfs track "*.exr"
+
