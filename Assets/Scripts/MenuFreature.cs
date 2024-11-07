@@ -17,5 +17,5 @@ public class MenuFreature : MonoBehaviour
         }
     }
 
-    public void DeleteAll() => MeasureFeature.Instance.ClearTapeLines();
+    public void DeleteAll() => MeasureFeature.Instance.ClearAllTape();
 }

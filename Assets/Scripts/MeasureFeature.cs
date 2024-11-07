@@ -8,9 +8,8 @@ using UnityEngine;
 
 public class MeasureFeature : MonoBehaviour
 {
-    // Singleton instance
-    public static MeasureFeature Instance { get; private set; }
-
+    
+    public static MeasureFeature Instance { get; private set; }  // Singleton Instance
 
     [Range(0.005f, 0.05f)]
     [Header("Tape Properties")]
@@ -35,8 +34,9 @@ public class MeasureFeature : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) 
-        { 
+        // Implementação do Singleton
+        if (Instance != null && Instance != this)
+        {
             Destroy(gameObject);
             return;
         }
@@ -54,24 +54,26 @@ public class MeasureFeature : MonoBehaviour
 
     private void HandleControllerActions(OVRInput.Controller controller, Transform tapeArea)
     {
-        if (currentController != controller && currentController != null) return;
-        //If the if statement only has 1 line, we don't need to use braces {}.
+        if(currentController != controller && currentController != null) return;
         if (OVRInput.GetDown(tapeActionButton, controller))
-        {
+        {   
             currentController = controller;
-            CalculateMeasurement();
             HandleDownAction(tapeArea);
+           
         }
         if (OVRInput.Get(tapeActionButton, controller))
-            HandleHoldAction(tapeArea);
-        if (OVRInput.GetUp(tapeActionButton, controller))
         {
+            HandleHoldAction(tapeArea);
+           
+        }
+            
+        if (OVRInput.GetUp(tapeActionButton, controller))
+        {   
             currentController = null;
             HandleUpAction(tapeArea);
+           
         }
 
-        if(OVRInput.GetDown(clearActionButton, controller))
-            ClearTapeLines();
     }
 
     private void HandleDownAction(Transform tapeArea) 
@@ -81,7 +83,8 @@ public class MeasureFeature : MonoBehaviour
     }
     private void HandleHoldAction(Transform tapeArea)
     {
-        lastTapeLineRenderer.SetPosition(1,tapeArea.position);
+        lastTapeLineRenderer.SetPosition(1, tapeArea.position);
+        CalculateMeasurement();
         AttachAndDetachMeasurementInfo(tapeArea);
     }
     private void HandleUpAction(Transform tapeArea)
@@ -89,30 +92,29 @@ public class MeasureFeature : MonoBehaviour
         AttachAndDetachMeasurementInfo(tapeArea, false);
     }
 
-    private void CreateNewTapeLine(Vector3 initialPosition)
+    private void CreateNewTapeLine(Vector3 initialPosiiton)
     {
-        var newTapeLine = new GameObject($"TapeLine_ {savedTapeLines.Count}",typeof(LineRenderer));
-
+        var newTapeLine = new GameObject($"Tapeline_{savedTapeLines.Count}", typeof(LineRenderer));
         lastTapeLineRenderer = newTapeLine.GetComponent<LineRenderer>();
         lastTapeLineRenderer.positionCount = 2;
         lastTapeLineRenderer.startWidth = tapeWidth;
         lastTapeLineRenderer.endWidth = tapeWidth;
         lastTapeLineRenderer.material = tapeMaterial;
-        lastTapeLineRenderer.SetPosition(0,initialPosition);
+        lastTapeLineRenderer.SetPosition(0, initialPosiiton);
         
         lastMeasurementInfo = Instantiate(tapePrefabInfo, Vector3.zero, Quaternion.identity).GetComponent<TextMeshPro>();
         lastMeasurementInfo.GetComponent<BillboardAlignment>().AttachTo(cameraRig.centerEyeAnchor);
         lastMeasurementInfo.gameObject.SetActive(false);
-        savedTapeLines.Add(new MeasureTape
-        {
+        savedTapeLines.Add(new MeasureTape {
             Tape = newTapeLine,
             TapeInfo = lastMeasurementInfo
-        });
 
+        } );
     }
 
     private void AttachAndDetachMeasurementInfo(Transform tapeArea, bool attachToController = true )
-    {
+    {   
+        
         //Atach Measurement while we're doing the measurement
         if (attachToController)
         {
@@ -139,6 +141,8 @@ public class MeasureFeature : MonoBehaviour
     }
 
 
+
+    
     private void CalculateMeasurement()
     {
         var distance = Vector3.Distance(lastTapeLineRenderer.GetPosition(0), lastTapeLineRenderer.GetPosition(1));
@@ -147,14 +151,18 @@ public class MeasureFeature : MonoBehaviour
         lastLine.TapeInfo.text = string.Format(measurementInfoFormat, $"{centimeters:F2}cm");
     }
 
-    private void OnDestroy() => ClearTapeLines();
+    private void OnDestroy() => ClearAllTape();
     
-    public void ClearTapeLines()
+    public void ClearAllTape()
     {
         foreach (var tapLine in savedTapeLines)
         {
             Destroy(tapLine.TapeInfo);
+            Destroy(tapLine.Tape);
         }
         savedTapeLines.Clear();
+
     }
+   
+    
 }
