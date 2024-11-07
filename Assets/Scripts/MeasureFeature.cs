@@ -8,6 +8,10 @@ using UnityEngine;
 
 public class MeasureFeature : MonoBehaviour
 {
+    // Singleton instance
+    public static MeasureFeature Instance { get; private set; }
+
+
     [Range(0.005f, 0.05f)]
     [Header("Tape Properties")]
     [SerializeField] private float tapeWidth = 0.01f;
@@ -29,7 +33,16 @@ public class MeasureFeature : MonoBehaviour
     private LineRenderer lastTapeLineRenderer;
     private OVRCameraRig cameraRig;
 
-    private void Awake() => cameraRig = FindObjectOfType<OVRCameraRig>();
+    private void Awake()
+    {
+        if (Instance == null) 
+        { 
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        cameraRig = FindObjectOfType<OVRCameraRig>();
+    }
 
 
     void Update()
@@ -58,7 +71,7 @@ public class MeasureFeature : MonoBehaviour
         }
 
         if(OVRInput.GetDown(clearActionButton, controller))
-            OnDestroy();
+            ClearTapeLines();
     }
 
     private void HandleDownAction(Transform tapeArea) 
@@ -134,9 +147,11 @@ public class MeasureFeature : MonoBehaviour
         lastLine.TapeInfo.text = string.Format(measurementInfoFormat, $"{centimeters:F2}cm");
     }
 
-    private void OnDestroy()
+    private void OnDestroy() => ClearTapeLines();
+    
+    public void ClearTapeLines()
     {
-        foreach (var tapLine in savedTapeLines) 
+        foreach (var tapLine in savedTapeLines)
         {
             Destroy(tapLine.TapeInfo);
         }
