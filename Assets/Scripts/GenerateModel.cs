@@ -19,7 +19,7 @@ public class GenerateModel : MonoBehaviour
 
     public void SpawnModel()
     {   
-        Vector3 spawnPosition = new Vector3(0, 0, 0);
+        Vector3 spawnPosition = new Vector3(1, 2, 2);
         Instantiate(modelObject, spawnPosition, transform.rotation);
     }
 }
