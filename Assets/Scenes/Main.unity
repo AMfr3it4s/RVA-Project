@@ -1954,10 +1954,6 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 138551849}
-    - targetCorrespondingSourceObject: {fileID: 3159839825100900288, guid: 323cb65d2594c79499a11a99ff0fb347,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 323cb65d2594c79499a11a99ff0fb347, type: 3}
 --- !u!4 &138551845 stripped
 Transform:
@@ -2047,7 +2043,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87950c797c5140b47b1432f8f8a67f1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tapeWidth: 0.0075
+  tapeWidth: 0.005
   tapeMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   tapePrefabInfo: {fileID: 6522618847793169372, guid: 0c1a30dd544b9c14bb666d5e0e141279,
     type: 3}
@@ -5565,11 +5561,7 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 714700071}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3159839825100900288, guid: 323cb65d2594c79499a11a99ff0fb347,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 323cb65d2594c79499a11a99ff0fb347, type: 3}
 --- !u!4 &410112096 stripped
 Transform:
@@ -11434,11 +11426,7 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1232325310}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3159839825100900288, guid: 323cb65d2594c79499a11a99ff0fb347,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 323cb65d2594c79499a11a99ff0fb347, type: 3}
 --- !u!4 &809744862 stripped
 Transform:
@@ -12519,11 +12507,7 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1949343277}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3159839825100900288, guid: 323cb65d2594c79499a11a99ff0fb347,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 323cb65d2594c79499a11a99ff0fb347, type: 3}
 --- !u!4 &867215819 stripped
 Transform:
@@ -13370,22 +13354,22 @@ PrefabInstance:
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 44.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -12
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1633644134168764041, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
@@ -13560,22 +13544,22 @@ PrefabInstance:
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 20
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -15
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7910756447020551074, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}

@@ -16,7 +16,7 @@ public class MeasureFeature : MonoBehaviour
     [SerializeField] private float tapeWidth = 0.01f;
     [SerializeField] private Material tapeMaterial;
     [SerializeField] private GameObject tapePrefabInfo;
-    [SerializeField] private Vector3 controllerOffset = new (0, 0.045f,0);
+    [SerializeField] private Vector3 controllerOffset = new (0, 0.08f,0);
     [SerializeField] private string measurementInfoFormat = "<mark=#0000005A padding=\"20,20,10,10\"><color=white>{0}</color></mark>";
     [SerializeField] private float measurementInfoLength = 0.01f;
     [Header("Trigger Button")]
@@ -134,8 +134,8 @@ public class MeasureFeature : MonoBehaviour
 
             Vector3 lineMidPoint = (lastTapeLineRenderer.GetPosition(0) + lastTapeLineRenderer.GetPosition(1)) / 2.0f;
 
-
-            lastMeasurementInfo.transform.position = lineMidPoint + (lineCrossPorduct.normalized * measurementInfoLength);
+            Vector3 offset = new Vector3(0, 0.02f,0);
+            lastMeasurementInfo.transform.position = lineMidPoint + (lineCrossPorduct.normalized * measurementInfoLength) + offset;
 
         }
     }
