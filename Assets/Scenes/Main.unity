@@ -5058,7 +5058,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1955465931}
   m_Father: {fileID: 1511279387}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &393711802
@@ -13354,22 +13355,22 @@ PrefabInstance:
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 44.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 591137851634150960, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -12
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1633644134168764041, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
@@ -13544,22 +13545,22 @@ PrefabInstance:
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 20
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7666493405706706040, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -15
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7910756447020551074, guid: ec0ece1bfa2e487428af437be0edfcde,
         type: 3}
@@ -15045,7 +15046,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1006511337
 Transform:
   m_ObjectHideFlags: 0
@@ -15074,10 +15075,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _handGrabInteractor: {fileID: 410489997}
-  _handVisual: {fileID: 0}
-  _handRenderer: {fileID: 0}
-  _materialEditor: {fileID: 0}
-  _glowColorGrabing: {r: 1, g: 1, b: 1, a: 0}
+  _handVisual: {fileID: 536417131}
+  _handRenderer: {fileID: 1126010056}
+  _materialEditor: {fileID: 1126010055}
+  _glowColorGrabing: {r: 0.36297002, g: 0.9811321, b: 0.18974723, a: 0}
   _glowColorHover: {r: 0.7264151, g: 0.7264151, b: 0.7264151, a: 0}
   _colorChangeSpeed: 0.5
   _glowFadeStartTime: 0.2
@@ -15556,7 +15557,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1056036483
 Transform:
   m_ObjectHideFlags: 0
@@ -15585,10 +15586,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _handGrabInteractor: {fileID: 309121042}
-  _handVisual: {fileID: 0}
-  _handRenderer: {fileID: 0}
-  _materialEditor: {fileID: 0}
-  _glowColorGrabing: {r: 1, g: 1, b: 1, a: 0}
+  _handVisual: {fileID: 876818097}
+  _handRenderer: {fileID: 847918301}
+  _materialEditor: {fileID: 847918300}
+  _glowColorGrabing: {r: 0.3647059, g: 0.9843137, b: 0.19215687, a: 0}
   _glowColorHover: {r: 0.7264151, g: 0.7264151, b: 0.7264151, a: 0}
   _colorChangeSpeed: 0.5
   _glowFadeStartTime: 0.2
@@ -25925,6 +25926,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 913804016}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1955465930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1955465931}
+  m_Layer: 0
+  m_Name: FollowPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1955465931
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1955465930}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.022999998, y: -0.619, z: 1.457}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 393711801}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1958906205
 GameObject:
   m_ObjectHideFlags: 0
@@ -30723,7 +30755,7 @@ PrefabInstance:
     - target: {fileID: 2489248329949343884, guid: 2bf512852cc46384f9288e623d186b01,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.096
+      value: 0.083
       objectReference: {fileID: 0}
     - target: {fileID: 2489248329949343884, guid: 2bf512852cc46384f9288e623d186b01,
         type: 3}
@@ -44750,8 +44782,27 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 909301336}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1412589560539949233, guid: 2bf512852cc46384f9288e623d186b01,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1967320191}
   m_SourcePrefab: {fileID: 100100000, guid: 2bf512852cc46384f9288e623d186b01, type: 3}
+--- !u!114 &1967320191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773190229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acaec53d1e8af564aa3aaa46c5c0bc77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  followPoint: {fileID: 1955465931}
+  smoothSpeed: 0.005
+  distanceFromHead: 1
 --- !u!1 &1972909218
 GameObject:
   m_ObjectHideFlags: 0
