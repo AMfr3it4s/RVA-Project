@@ -21,7 +21,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 {
     [Header ("API EndPoints")]
     [Section("Model Generation EndPoint")]
-    [SerializeField] private string apiEndpoint = "https://api.meshy.ai/v2/text-to-3d";
+    [SerializeField] private string modelEndpoint = "https://api.meshy.ai/v2/text-to-3d";
     [Section("Texture Generation EndPoint")]
     [SerializeField] private string textureEndpoint = "https://api.meshy.ai/v1/text-to-texture";
     [Header("Prompt for the Meshy API")]
@@ -87,7 +87,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         byte[] byteData = Encoding.UTF8.GetBytes(json);
 
 
-        using (UnityWebRequest request = new UnityWebRequest(apiEndpoint, "POST"))
+        using (UnityWebRequest request = new UnityWebRequest(modelEndpoint, "POST"))
         {
             //byte[] bodyRaw = byteData;
             request.uploadHandler = new UploadHandlerRaw(byteData);
@@ -261,7 +261,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         Debug.Log("Fetching response from Meshy...");
         messageText.text = "Fetching response from Meshy";
 
-        using (UnityWebRequest request = UnityWebRequest.Get($"{apiEndpoint}/{taskID}"))
+        using (UnityWebRequest request = UnityWebRequest.Get($"{modelEndpoint}/{taskID}"))
         {
             request.SetRequestHeader("Authorization", $"Bearer {apiKey}");
             request.SetRequestHeader("Content-Type", "application/json");
