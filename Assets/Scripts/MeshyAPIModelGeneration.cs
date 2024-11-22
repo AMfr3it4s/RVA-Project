@@ -10,6 +10,11 @@ using TMPro;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using TriLibCore;
+using LibTessDotNet;
+using CandyCoded.env;
+
+
+
 
 
 public class MeshyAPIModelGeneration : MonoBehaviour
@@ -38,13 +43,15 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
     private string previousModelUrl;    
     private string apiPrompt;
-    private string apiKey = "msy_qw5ZYGNc0WBVq1tG5hZo9aJIHtCuNoJkHshz"; //"msy_qw5ZYGNc0WBVq1tG5hZo9aJIHtCuNoJkHshz"  "msy_7CmTCMbl1bWILcXGlW3bdw1MMIue5Bnoi3om"
+    private string apiKey;
     private string taskID = string.Empty;
     private bool isFetchingResponse = false;  
     private List<GameObject> createdObjects = new List<GameObject>();
 
     void Start()
-    {   
+    {
+        //env.variables.TryGetValue("API_KEY2", out apiKey);
+        env.variables.TryGetValue("API_KEY1", out apiKey);   
         GenerateModel();
         Debug.Log("Request");   
     }
