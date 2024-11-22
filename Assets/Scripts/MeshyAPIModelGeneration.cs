@@ -345,39 +345,36 @@ public class MeshyAPIModelGeneration : MonoBehaviour
             Debug.Log("Model not found");
             return;
         }
+
+
+        // Add Rigidbody
+        Rigidbody rb = generatedModel.GetComponent<Rigidbody>();
+        if(rb == null)
+        {
+            rb = generatedModel.AddComponent<Rigidbody>();
+        }
+        rb.useGravity = true;
+        rb.isKinematic = false;
+        rb.mass = 20f;
         
         // Add Collider
-        GameObject gameObjectFound = GameObject.Find("Mesh1");
-        if(gameObjectFound == null)
-        {
-            Debug.Log("GameObject Not Found");
-            return;
-        }
-        MeshFilter meshFilter = gameObjectFound.GetComponent<MeshFilter>();
+        MeshFilter meshFilter = generatedModel.GetComponentInChildren<MeshFilter>();
         if(meshFilter == null)
         {
             Debug.Log("MeshFilter not Found");
             return;
         }
-        Mesh mesh = meshFilter.mesh;
-        MeshCollider collider = gameObjectFound.GetComponent<MeshCollider>();
+        Mesh mesh = meshFilter.sharedMesh;
+        MeshCollider collider = generatedModel.GetComponent<MeshCollider>();
         if(collider == null)
         {
-            collider = gameObjectFound.AddComponent<MeshCollider>();
+            collider = generatedModel.AddComponent<MeshCollider>();
         }
+        collider.sharedMesh = mesh;
         collider.convex = true;
         collider.isTrigger = false;
         collider.sharedMesh = mesh;
 
-        // Add Rigidbody
-        Rigidbody rb = gameObjectFound.GetComponent<Rigidbody>();
-        if(rb == null)
-        {
-            rb = gameObjectFound.AddComponent<Rigidbody>();
-        }
-        rb.useGravity = true;
-        rb.isKinematic = false;
-        rb.mass = 20f;
 
 
 
