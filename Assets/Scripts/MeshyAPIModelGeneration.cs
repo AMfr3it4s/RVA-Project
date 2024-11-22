@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using TMPro;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
+using TriLibCore;
 
 
 public class MeshyAPIModelGeneration : MonoBehaviour
@@ -20,7 +21,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     [SerializeField] private string textureEndpoint = "https://api.meshy.ai/v1/text-to-texture";
     [Header("Prompt for the Meshy API")]
     [SerializeField] private string objectPrompt = "A small cloud with a kid flying on it";
-
+    [Header("Model URL")]
+    [SerializeField] private string modelUrl;
     [Header("Reference to the Input Field")]
    // [SerializeField] private InputField inputField;
 
@@ -36,7 +38,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
     private string previousModelUrl;    
     private string apiPrompt;
-    private string apiKey = "msy_7CmTCMbl1bWILcXGlW3bdw1MMIue5Bnoi3om"; //"msy_qw5ZYGNc0WBVq1tG5hZo9aJIHtCuNoJkHshz"
+    private string apiKey = "msy_qw5ZYGNc0WBVq1tG5hZo9aJIHtCuNoJkHshz"; //"msy_qw5ZYGNc0WBVq1tG5hZo9aJIHtCuNoJkHshz"  "msy_7CmTCMbl1bWILcXGlW3bdw1MMIue5Bnoi3om"
     private string taskID = string.Empty;
     private bool isFetchingResponse = false;  
     private List<GameObject> createdObjects = new List<GameObject>();
@@ -278,7 +280,9 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                     messageText.text = "Model generation succeeded!";
 
                     var modelUrls = JsonConvert.DeserializeObject<Dictionary<string, string>>(response["model_urls"].ToString());
-                    if (modelUrls.ContainsKey("glb"))
+
+                    //GLB MODEL URL DOWNLOAD
+                    /*if (modelUrls.ContainsKey("glb"))
                     {
                         string glbUrl = modelUrls["glb"];
                         Debug.Log($"GLB URL: {glbUrl}");
@@ -295,6 +299,24 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                         infoMenu.SetActive(false);
                         audioSource.Stop();
                         break; 
+                    }
+                    */
+                    //FBX MODEL URL DOWNLOAD
+                    if (modelUrls.ContainsKey("fbx"))
+                    {
+                            string fbxUrl = modelUrls["fbx"];
+                            Debug.Log($"FBX URL: {fbxUrl}");
+                            previousModelUrl = fbxUrl;
+                            messageText.text = "SpawningModel";
+                            modelUrl = fbxUrl;
+
+                            var assetLoaderOptions = AssetLoader.CreateDefaultLoaderOptions();
+                            var webRequest = UnityWebRequest.Get(modelUrl);
+                            webRequest.SetRequestHeader("User-Agent", "Unity Web Request");
+                            webRequest.SetRequestHeader("Authorization", $"Bearer {apiKey}");
+                            AssetDownloader.LoadModelFromUri(webRequest, OnLoad, OnMaterialsLoad, OnProgress, OnError, null, assetLoaderOptions, isZipFile:false, fileExtension:"fbx" );
+                            taskID = string.Empty;
+                            break;
                     }
                 }
                 else
@@ -313,33 +335,22 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
     public void GenerateModel()
     {
-        //GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        //Loading a gltf
 
-            //cube.transform.position = new Vector3(0, 0, 2);
-            //cube.transform.rotation = Quaternion.Euler(new Vector3(45, 45, 0));
+        //GameObject gameObject = new GameObject();
 
+        //var gltf = gameObject.AddComponent<GLTFast.GltfAsset>();
+        //gltf.Url = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf";
 
-            //Loading a gltf
+        //Starts function to do a request to the API
+        StartCoroutine(RequestObject());
 
-            //GameObject gameObject = new GameObject();
-
-            //var gltf = gameObject.AddComponent<GLTFast.GltfAsset>();
-            //gltf.Url = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf";
-
-            //gameObject.transform.position = new Vector3(0, 0, 2);
-            //gameObject.transform.rotation = Quaternion.Euler(new Vector3(45, 45, 0));
-
-
-            //Starts function to do a request to the API
-            StartCoroutine(RequestObject());
-            
-
-            //current.addComponent<BoxCollider>();
     }
 
 
-     private void AddHandInteraction(GameObject generatedModel)
-    {   
+    private void AddHandInteraction(GameObject generatedModel)
+    {
+        messageText.text = "Finishing Model";
         if(generatedModel == null)
         {
             Debug.Log("Model not found");
@@ -348,16 +359,20 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
 
         // Add Rigidbody
+        messageText.text = "Applying Rigidbody";
         Rigidbody rb = generatedModel.GetComponent<Rigidbody>();
         if(rb == null)
         {
             rb = generatedModel.AddComponent<Rigidbody>();
         }
         rb.useGravity = true;
-        rb.isKinematic = false;
+        rb.isKinematic = true;
         rb.mass = 20f;
+
         
+
         // Add Collider
+        messageText.text = "Applying Collider";
         MeshFilter meshFilter = generatedModel.GetComponentInChildren<MeshFilter>();
         if(meshFilter == null)
         {
@@ -373,50 +388,64 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         collider.sharedMesh = mesh;
         collider.convex = true;
         collider.isTrigger = false;
-        collider.sharedMesh = mesh;
 
 
-
-
-        // Add Grabbale Interaction for commands and hands~
+        // Add Grabbale Interaction for commands and hands
 
         //Attach GameObject Interaction To parent Object
+        messageText.text = "Applying Interaction";
         GameObject interactionPrefabInstance = Instantiate(interactionPrefab, generatedModel.transform, worldPositionStays:false);
         interactionPrefabInstance.transform.SetParent(generatedModel.transform, worldPositionStays: false);
-       
 
-        /*
-        //Interaction Components of the object
-       Grabbable grabbable = interactionPrefab.GetComponent<Grabbable>();
-       HandGrabInteractable handGrabInteractable = interactionPrefab.GetComponent<HandGrabInteractable>();
-       GrabInteractable grabInteractable = interactionPrefab.GetComponent<GrabInteractable>();
-       GrabFreeTransformer grabFreeTransformer = interactionPrefab.GetComponent<GrabFreeTransformer>();
-
-       //Populate Necessary fields of the components
-       if(grabbable != null)
+        var handGrabInteractable  = interactionPrefabInstance.GetComponent<HandGrabInteractable>();
+        if(handGrabInteractable != null)
         {
-            grabbable.InjectOptionalRigidbody(generatedModel.GetComponent<Rigidbody>());
-            grabbable.TransferOnSecondSelection = false;
-            grabbable.InjectOptionalOneGrabTransformer(grabFreeTransformer);
-            grabbable.InjectOptionalTwoGrabTransformer(grabFreeTransformer);
-            grabbable.InjectOptionalTargetTransform(generatedModel.transform);
+            handGrabInteractable.enabled = true;
         }
-       if(handGrabInteractable != null)
-        {
-            handGrabInteractable.InjectRigidbody(generatedModel.GetComponent<Rigidbody>());
-            handGrabInteractable.InjectSupportedGrabTypes(Oculus.Interaction.Grab.GrabTypeFlags.Pinch);
-        }
+        var grabInteractable = interactionPrefabInstance.GetComponent<GrabInteractable>();
         if(grabInteractable != null)
         {
-            grabInteractable.InjectRigidbody(generatedModel.GetComponent<Rigidbody>());
+            grabInteractable.enabled = true;
         }
-        */
-                
+        
+        interactionPrefabInstance.GetComponentInChildren<Grabbable>().InjectOptionalRigidbody(rb);
+        interactionPrefabInstance.GetComponentInChildren<HandGrabInteractable>().InjectRigidbody(rb);
+        interactionPrefabInstance.GetComponentInChildren<GrabInteractable>().InjectRigidbody(rb);
+
+
+        audioSource.Stop();
+        infoMenu.SetActive(false);
+
+
     }
 
+    private void OnError(IContextualizedError obj)
+    {
+        Debug.LogError($"Error While Loading The Model: {obj.GetInnerException()}");
+        messageText.text = $"Error While Loading The Model: {obj.GetInnerException()}";
+    }
+    private void OnProgress(AssetLoaderContext assetLoaderContext, float progress)
+    {
+        Debug.Log($"Loading Model. Progress: {progress:P}");
+        messageText.text = $"Loading Model. Progress: {progress:P}";
+    }
 
+    private void OnMaterialsLoad(AssetLoaderContext assetLoaderContext)
+    {
+        Debug.Log("Loading Materials");
+        messageText.text = "Loading Materials";
+        
+    }
 
+    private void OnLoad(AssetLoaderContext assetLoaderContext)
+    {
+        Debug.Log("Model Loaded");
+        messageText.text = "Model Loaded";
+        GameObject loadedModel = assetLoaderContext.RootGameObject;
+        loadedModel.transform.position = new Vector3(0, 2, 1);
+        createdObjects.Add(loadedModel);
+        AddHandInteraction(loadedModel);
 
-
+    }
 
 }
