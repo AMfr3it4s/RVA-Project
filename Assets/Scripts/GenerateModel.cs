@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GenerateModel : MonoBehaviour
 {   
-    [SerializeField] private GameObject modelObject;
+    [SerializeField] private GameObject infoMenu;
     // Start is called before the first frame update
     void Start()
     {
@@ -17,9 +17,8 @@ public class GenerateModel : MonoBehaviour
         
     }
 
-    public void SpawnModel()
+    public void OnClickGenerate()
     {   
-        Vector3 spawnPosition = new Vector3(1, 2, 2);
-        Instantiate(modelObject, spawnPosition, transform.rotation);
+        infoMenu.SetActive(true);
     }
 }
