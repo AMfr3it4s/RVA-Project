@@ -30,7 +30,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     [Header("Model URL")]
     [SerializeField] private string modelUrl;
     [Header("Reference to the Input Field")]
-   // [SerializeField] private InputField inputField;
+    [SerializeField] private TMP_InputField inputField;
     [Header("Reference to the Interaction Prefab for every generated Model")]
     [SerializeField] private GameObject interactionPrefab;
     [Header("Reference to Error Handler Button")]
@@ -51,9 +51,10 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
     void Start()
     {
+        apiPrompt = inputField.text;
         //env.variables.TryGetValue("API_KEY2", out apiKey);
-        env.variables.TryGetValue("API_KEY1", out apiKey);   
-        GenerateModel();
+        env.variables.TryGetValue("API_KEY1", out apiKey);
+        //GenerateModel();
     }
     void Update()
     {   
@@ -71,14 +72,14 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     // Does the first request to the meshy API with the prompt given by the user, it will retain the task ID, this task will be updated with the GetResponse() function
     public IEnumerator RequestObject()
     {   
-       // apiPrompt = inputField.text;
+        
         Debug.Log("ENTERING REQUEST OBJECT TO THE API AREA");
         messageText.text = "ENTERING REQUEST OBJECT TO THE API AREA";
 
         var requestBody = new
         {
             mode = "preview",
-            prompt = objectPrompt , //Dinamicaly Pass the Input from the user change to apiPrompt latter
+            prompt = apiPrompt , //Dinamicaly Pass the Input from the user change to apiPrompt latter || Mannualy change to objectPrompt
             art_style = "realistic",
             negative_prompt = "medium quality"
         };
