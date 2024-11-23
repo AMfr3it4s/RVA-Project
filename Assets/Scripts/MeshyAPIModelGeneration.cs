@@ -29,6 +29,11 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     [SerializeField] private string objectPrompt = "A small cloud with a kid flying on it";
     [Header("Model URL")]
     [SerializeField] private string modelUrl;
+    [Header("Texture URL")]
+    [SerializeField] private string textureUrl;
+    [SerializeField] private string metallicUrl;
+    [SerializeField] private string roughnessUrl;
+    [SerializeField] private string normalUrl;
     [Header("Reference to the Input Field")]
     [SerializeField] private TMP_InputField inputField;
     [Header("Reference to the Interaction Prefab for every generated Model")]
@@ -42,19 +47,22 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
 
     private string errorFlag;
-    private string previousModelUrl;    
+    private string previousModelUrl;
+    private string previousTextureUrl;
     private string apiPrompt;
     private string apiKey;
     private string taskID = string.Empty;
-    private bool isFetchingResponse = false;  
+    private string taskIdTexture = string.Empty;
+    private bool isFetchingResponse = false;
+    private bool isFetchingResponseTexture = false;
     private List<GameObject> createdObjects = new List<GameObject>();
 
     void Start()
     {
         apiPrompt = inputField.text;
-        //env.variables.TryGetValue("API_KEY2", out apiKey);
-        env.variables.TryGetValue("API_KEY1", out apiKey);
-        //GenerateModel();
+        //switch 1,2,3
+        env.variables.TryGetValue("API_KEY3", out apiKey);
+        GenerateModel();
     }
     void Update()
     {   
@@ -65,7 +73,11 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         audioSource.Play();
         Debug.Log("LOADING 3D MODEL");
         messageText.text = "LOADING 3D MODEL";
-    }
+    }   
+        if(!string.IsNullOrEmpty(taskIdTexture)  && !isFetchingResponseTexture)
+        {
+            StartCoroutine(GetResponseTexture());
+        }
                 
     }
 
@@ -79,9 +91,10 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         var requestBody = new
         {
             mode = "preview",
-            prompt = apiPrompt , //Dinamicaly Pass the Input from the user change to apiPrompt latter || Mannualy change to objectPrompt
+            prompt = objectPrompt , //Dinamicaly Pass the Input from the user change to apiPrompt latter || Mannualy change to objectPrompt
             art_style = "realistic",
-            negative_prompt = "medium quality"
+            negative_prompt = "medium quality",
+            texture_richness = "medium"
         };
 
         string json = JsonConvert.SerializeObject(requestBody);
@@ -139,10 +152,11 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         {
            //request body 
            model_url = previousModelUrl,
+           object_prompt = "realistic texture",
            style_prompt = "realistic",
            enable_original_uv = true,
            enable_pbr = true,
-           resolution = "4096",
+           resolution = "2048",
            negative_prompt = "medium quality",
         };
 
@@ -176,9 +190,9 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                 var response = JsonConvert.DeserializeObject<Dictionary<string, object>>(request.downloadHandler.text);
                 if (response.ContainsKey("result"))
                 {
-                    taskID = response["result"].ToString();
+                    taskIdTexture = response["result"].ToString();
                     Debug.Log("Task ID: " + taskID);
-                    messageText.text = "Task ID: " + taskID;
+                    messageText.text = "Task ID: " + taskIdTexture;
                 }
                 else
                 {
@@ -191,15 +205,15 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
     public IEnumerator GetResponseTexture()
     {
-     isFetchingResponse = true;
+     isFetchingResponseTexture = true;
 
     //Loop to check if the API returned de taskId, runs every 10 seconds
-    while (!string.IsNullOrEmpty(taskID))
+    while (!string.IsNullOrEmpty(taskIdTexture))
     {
         Debug.Log("Fetching response from Meshy...");
         messageText.text = "Fetching response from Meshy";
 
-        using (UnityWebRequest request = UnityWebRequest.Get($"{textureEndpoint}/{taskID}"))
+        using (UnityWebRequest request = UnityWebRequest.Get($"{textureEndpoint}/{taskIdTexture}"))
         {
             request.SetRequestHeader("Authorization", $"Bearer {apiKey}");
             request.SetRequestHeader("Content-Type", "application/json");
@@ -220,36 +234,45 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
                 var response = JsonConvert.DeserializeObject<Dictionary<string, object>>(request.downloadHandler.text);
 
-                if (response.ContainsKey("status") && response["status"].ToString() == "SUCCEEDED" && response.ContainsKey("texture_urls"))
-                {
-                    Debug.Log("Model generation succeeded!");
-                    messageText.text = "Model generation succeeded!";
+                        if (response.ContainsKey("status") && response["status"].ToString() == "SUCCEEDED" && response.ContainsKey("texture_urls"))
+                        {   
+                            Debug.Log("Texture generation succeeded!");
+                            messageText.text = "Texture generation succeeded!";
 
-                    var textureUrls = JsonConvert.DeserializeObject<Dictionary<string, string>>(response["texture_urls"].ToString());
-                    if (textureUrls.ContainsKey("base_color"))
-                    {   
-                        messageText.text = "Generating Texture";
-                        Texture texture = ((DownloadHandlerTexture)request.downloadHandler).texture;
-                        Renderer renderer = createdObjects[createdObjects.Count - 1].GetComponent<Renderer>();
-                        renderer.material.SetTexture("_BaseMap", texture);
+                            var textureUrls = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(response["texture_urls"].ToString()); ;
+                            if (textureUrls != null && textureUrls.Count > 0 && textureUrls[0].ContainsKey("base_color"))
+                            {
+                                string baseColorUrl = textureUrls[0]["base_color"];
+                                string metallicUrls = textureUrls[0]["metallic"];
+                                string roroughnessUrls = textureUrls[0]["roughness"];
+                                string normalUrls = textureUrls[0]["normal"];
+                            messageText.text = "Generating Texture";
+                                textureUrl = baseColorUrl;
+                                metallicUrl = metallicUrls;
+                                roughnessUrl = roroughnessUrls;
+                                normalUrl = normalUrls;
+                                StartLoadingTextures();
+                                taskID = string.Empty;
+                                infoMenu.SetActive(false);
+                                audioSource.Stop();
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("Texture not ready yet. Retrying...");
+                            messageText.text = "Texture Not Ready Yet. Retrying...";
                         
-                        taskID = string.Empty;
-                        infoMenu.SetActive(false);
-                        break; 
-                    }
+                        }
+                    
                 }
-                else
-                {
-                    Debug.Log("Model not ready yet. Retrying...");
-                    messageText.text = "Model not ready yet. Retrying...";
-                }
-            }
+                    
         }
 
         yield return new WaitForSeconds(10); // Waiting Time
     }
 
-    isFetchingResponse = false;
+    isFetchingResponseTexture = false;
 }   
     
 
@@ -287,46 +310,74 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
                 var response = JsonConvert.DeserializeObject<Dictionary<string, object>>(request.downloadHandler.text);
 
-                if (response.ContainsKey("status") && response["status"].ToString() == "SUCCEEDED" && response.ContainsKey("model_urls"))
+                if (response.ContainsKey("status") && response["status"].ToString() == "SUCCEEDED" && response.ContainsKey("model_urls") && response.ContainsKey("texture_urls"))
                 {
                     Debug.Log("Model generation succeeded!");
                     messageText.text = "Model generation succeeded!";
 
                     var modelUrls = JsonConvert.DeserializeObject<Dictionary<string, string>>(response["model_urls"].ToString());
 
-                    //GLB MODEL URL DOWNLOAD
-                    /*if (modelUrls.ContainsKey("glb"))
-                    {
-                        string glbUrl = modelUrls["glb"];
-                        Debug.Log($"GLB URL: {glbUrl}");
-                        previousModelUrl = glbUrl;
-                        messageText.text = "SpawningModel";
+                    var textureUrls = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(response["texture_urls"].ToString());
 
-                        GameObject gameObject = new GameObject("GeneratedModel");
-                        var gltf = gameObject.AddComponent<GLTFast.GltfAsset>();
-                        gltf.Url = glbUrl;
-                        gameObject.transform.position = new Vector3(0, 2, 1);
-                        AddHandInteraction(gameObject);
-                        createdObjects.Add(gameObject);
-                        taskID = string.Empty;
-                        infoMenu.SetActive(false);
-                        audioSource.Stop();
-                        break; 
-                    }
-                    */
-                    //FBX MODEL URL DOWNLOAD
-                    if (modelUrls.ContainsKey("fbx"))
-                    {
-                            string fbxUrl = modelUrls["fbx"];
-                            Debug.Log($"FBX URL: {fbxUrl}");
-                            previousModelUrl = fbxUrl;
+                        // Obtém a URL da textura (a primeira textura da lista)
+
+
+                        //GLB MODEL URL DOWNLOAD
+                        /*if (modelUrls.ContainsKey("glb"))
+                        {
+                            string glbUrl = modelUrls["glb"];
+                            Debug.Log($"GLB URL: {glbUrl}");
+                            previousModelUrl = glbUrl;
                             messageText.text = "SpawningModel";
-                            modelUrl = fbxUrl;
 
-                            LoadModel();
+                            GameObject gameObject = new GameObject("GeneratedModel");
+                            var gltf = gameObject.AddComponent<GLTFast.GltfAsset>();
+                            gltf.Url = glbUrl;
+                            gameObject.transform.position = new Vector3(0, 2, 1);
+                            AddHandInteraction(gameObject);
+                            createdObjects.Add(gameObject);
                             taskID = string.Empty;
-                            break;
-                    }
+                            infoMenu.SetActive(false);
+                            audioSource.Stop();
+                            break; 
+                        }
+                        */
+                        //FBX MODEL URL DOWNLOAD
+
+                        //Verified if the generated model has textures or not; it may have textures in the future.
+                        if (textureUrls != null && textureUrls.Count > 0 && textureUrls[0].ContainsKey("base_color"))
+                        {
+                            if (modelUrls.ContainsKey("fbx") && modelUrls.ContainsKey("glb"))
+                            {
+                                string fbxUrl = modelUrls["fbx"];
+                                string baseColorUrl = textureUrls[0]["base_color"];
+                                Debug.Log($"FBX URL: {fbxUrl}");
+                                previousModelUrl = fbxUrl;
+                                previousTextureUrl = baseColorUrl;
+                                messageText.text = "SpawningModel";
+                                modelUrl = fbxUrl;
+                                textureUrl = baseColorUrl;
+                                LoadModel();
+                                StartLoadingTextures();
+                                taskID = string.Empty;
+                                break;
+                            }
+                        }else
+                        {
+                            if (modelUrls.ContainsKey("fbx") && modelUrls.ContainsKey("glb"))
+                            {
+                                string fbxUrl = modelUrls["fbx"];
+                                string glbUrl = modelUrls["glb"];
+                                Debug.Log($"FBX URL: {fbxUrl}");
+                                previousModelUrl = glbUrl;
+                                messageText.text = "SpawningModel";
+                                modelUrl = fbxUrl;
+                                LoadModel();
+                                taskID = string.Empty;
+                                break;
+                            }
+                        }
+                            
                 }
                 else
                 {
@@ -426,8 +477,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         interactionPrefabInstance.GetComponentInChildren<GrabInteractable>().InjectRigidbody(rb);
 
 
-        audioSource.Stop();
-        infoMenu.SetActive(false);
+        StartCoroutine(RequestTexture());
+        
 
 
     }
@@ -440,6 +491,84 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         webRequest.SetRequestHeader("Authorization", $"Bearer {apiKey}");
         AssetDownloader.LoadModelFromUri(webRequest, OnLoad, OnMaterialsLoad, OnProgress, OnError, null, assetLoaderOptions, isZipFile: false, fileExtension: "fbx");
     }
+
+    private void StartLoadingTextures()
+    {
+        StartCoroutine(LoadTextures());
+    }
+
+    private IEnumerator LoadTextures()
+    {
+        Texture2D baseColorTexture = null;
+        Texture2D metallicTexture = null;
+        Texture2D roughnessTexture = null;
+        Texture2D normalTexture = null;
+
+        
+        yield return StartCoroutine(DownloadTexture(textureUrl, texture => baseColorTexture = texture));
+        yield return StartCoroutine(DownloadTexture(metallicUrl, texture => metallicTexture = texture));
+        yield return StartCoroutine(DownloadTexture(roughnessUrl, texture => roughnessTexture = texture));
+        yield return StartCoroutine(DownloadTexture(normalUrl, texture => normalTexture = texture));
+
+        
+        if (baseColorTexture && metallicTexture && roughnessTexture && normalTexture)
+        {
+            
+            Material newMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            newMaterial.SetTexture("_BaseMap", baseColorTexture);      
+            newMaterial.SetTexture("_MetallicGlossMap", metallicTexture); 
+            newMaterial.SetTexture("_SpecGlossMap", roughnessTexture); 
+            newMaterial.SetTexture("_BumpMap", normalTexture);         
+
+            
+            if (createdObjects.Count > 0)
+            {
+                GameObject loadedModel = createdObjects[createdObjects.Count - 1];
+                var renderer = loadedModel.GetComponentInChildren<Renderer>();
+                if (renderer != null)
+                {
+                    renderer.material = newMaterial;
+                }
+            }
+
+            Debug.Log("All Textures Loaded and Applied");
+            messageText.text = "All Textures Loaded and Applied";
+        }
+        else
+        {
+            Debug.LogError("Error While Loading One or More Textures");
+            messageText.text = "Error While Loading One or More Textures";
+            errorFlag = "Loading Textures";
+            buttonGameobject.SetActive(true);
+        }
+    }
+
+    private IEnumerator DownloadTexture(string url, System.Action<Texture2D> onSuccess)
+    {
+        using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
+        {
+            webRequest.SetRequestHeader("User-Agent", "Unity Web Request");
+            webRequest.SetRequestHeader("Authorization", $"Bearer {apiKey}");
+
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(webRequest);
+                onSuccess?.Invoke(texture);
+                
+            }
+            else
+            {
+                Debug.LogError($"Error loading texture from {url}: {webRequest.error}");
+                messageText.text = $"Error loading texture from {url}: {webRequest.error}";
+                errorFlag = "Loading Texture";
+                buttonGameobject.SetActive(true);
+            }
+        }
+    }
+
+
     private void OnError(IContextualizedError obj)
     {
         Debug.LogError($"Error While Loading The Model: {obj.GetInnerException()}");
