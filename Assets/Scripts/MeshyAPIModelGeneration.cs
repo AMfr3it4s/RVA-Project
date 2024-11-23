@@ -12,6 +12,7 @@ using Oculus.Interaction.HandGrab;
 using TriLibCore;
 using LibTessDotNet;
 using CandyCoded.env;
+using Unity.VisualScripting;
 
 
 
@@ -30,17 +31,17 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     [SerializeField] private string modelUrl;
     [Header("Reference to the Input Field")]
    // [SerializeField] private InputField inputField;
-
     [Header("Reference to the Interaction Prefab for every generated Model")]
     [SerializeField] private GameObject interactionPrefab;
-
+    [Header("Reference to Error Handler Button")]
+    [SerializeField] private GameObject buttonGameobject;
     [Header("Debug")]
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private GameObject infoMenu;
-
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
 
+    private string errorFlag;
     private string previousModelUrl;    
     private string apiPrompt;
     private string apiKey;
@@ -53,7 +54,6 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         //env.variables.TryGetValue("API_KEY2", out apiKey);
         env.variables.TryGetValue("API_KEY1", out apiKey);   
         GenerateModel();
-        Debug.Log("Request");   
     }
     void Update()
     {   
@@ -78,7 +78,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         var requestBody = new
         {
             mode = "preview",
-            prompt = objectPrompt , //Dinamicaly Pass the Input from the user
+            prompt = objectPrompt , //Dinamicaly Pass the Input from the user change to apiPrompt latter
             art_style = "realistic",
             negative_prompt = "medium quality"
         };
@@ -105,6 +105,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
             if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
             {
                 Debug.LogError("Error: " + request.error);
+                errorFlag = "Request Object";
+                buttonGameobject.SetActive(true);
             }
             else
             {
@@ -128,7 +130,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
     public IEnumerator RequestTexture()
     {
-        // apiPrompt = inputField.text;
+        
         Debug.Log("ENTERING REQUEST OBJECT TO THE API AREA");
         messageText.text = "ENTERING REQUEST OBJECT TO THE API AREA";
 
@@ -207,6 +209,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
             {
                 Debug.LogError("Error fetching response: " + request.error);
                 messageText.text = "Error fetching response: " + request.error;
+                buttonGameobject.SetActive(true);
                 break; 
             }
             else
@@ -272,6 +275,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
             {
                 Debug.LogError("Error fetching response: " + request.error);
                 messageText.text = "Error fetching response: " + request.error;
+                buttonGameobject.SetActive(true);
+                errorFlag = "GetReponseObject";
                 break; 
             }
             else
@@ -317,11 +322,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                             messageText.text = "SpawningModel";
                             modelUrl = fbxUrl;
 
-                            var assetLoaderOptions = AssetLoader.CreateDefaultLoaderOptions();
-                            var webRequest = UnityWebRequest.Get(modelUrl);
-                            webRequest.SetRequestHeader("User-Agent", "Unity Web Request");
-                            webRequest.SetRequestHeader("Authorization", $"Bearer {apiKey}");
-                            AssetDownloader.LoadModelFromUri(webRequest, OnLoad, OnMaterialsLoad, OnProgress, OnError, null, assetLoaderOptions, isZipFile:false, fileExtension:"fbx" );
+                            LoadModel();
                             taskID = string.Empty;
                             break;
                     }
@@ -331,6 +332,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                     Debug.Log("Model not ready yet. Retrying...");
                     messageText.text = "Model not ready yet. Retrying...";
                 }
+
+            buttonGameobject.SetActive(false);
             }
         }
 
@@ -338,7 +341,9 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     }
 
     isFetchingResponse = false;
-}
+}   
+
+
 
     public void GenerateModel()
     {
@@ -426,10 +431,20 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
     }
 
+    private void LoadModel() 
+    {
+        var assetLoaderOptions = AssetLoader.CreateDefaultLoaderOptions();
+        var webRequest = UnityWebRequest.Get(modelUrl);
+        webRequest.SetRequestHeader("User-Agent", "Unity Web Request");
+        webRequest.SetRequestHeader("Authorization", $"Bearer {apiKey}");
+        AssetDownloader.LoadModelFromUri(webRequest, OnLoad, OnMaterialsLoad, OnProgress, OnError, null, assetLoaderOptions, isZipFile: false, fileExtension: "fbx");
+    }
     private void OnError(IContextualizedError obj)
     {
         Debug.LogError($"Error While Loading The Model: {obj.GetInnerException()}");
         messageText.text = $"Error While Loading The Model: {obj.GetInnerException()}";
+        errorFlag = "Loading Model";
+        buttonGameobject.SetActive(true);
     }
     private void OnProgress(AssetLoaderContext assetLoaderContext, float progress)
     {
@@ -449,10 +464,42 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         Debug.Log("Model Loaded");
         messageText.text = "Model Loaded";
         GameObject loadedModel = assetLoaderContext.RootGameObject;
-        loadedModel.transform.position = new Vector3(0, 2, 1);
+        loadedModel.transform.position = new Vector3(0, 0.5f, 1.5f);
         createdObjects.Add(loadedModel);
         AddHandInteraction(loadedModel);
 
+    }
+
+    //Error Handling what to do if its get an error 
+    private void ErrorHandling(string errorFlag) 
+    {
+        switch (errorFlag)
+        {
+            case "GetReponseObject":
+                messageText.text = "Trying API Response again!";
+                StartCoroutine(GetResponse());
+                break;
+            case "Request Object":
+                messageText.text = "Trying API Request again!";
+                StartCoroutine(RequestObject());
+                break;
+            case "Loading Model":
+                messageText.text = "Trying Load Model again!";
+                LoadModel();      
+                break;
+            default:
+                messageText.text = "Trying Generate Model again!";
+                GenerateModel();
+                break;
+        }   
+        
+    }
+
+    public void OnButtonClickTry()
+    {
+        ErrorHandling(errorFlag);
+        buttonGameobject.SetActive(false);
+        errorFlag = "";
     }
 
 }
