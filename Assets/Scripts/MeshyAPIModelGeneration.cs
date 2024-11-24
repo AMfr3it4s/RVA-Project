@@ -13,6 +13,7 @@ using TriLibCore;
 using LibTessDotNet;
 using CandyCoded.env;
 using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime;
 
 
 
@@ -62,7 +63,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         apiPrompt = inputField.text;
         //switch 1,2,3
         env.variables.TryGetValue("API_KEY3", out apiKey);
-        GenerateModel();
+        //GenerateModel();
     }
     void Update()
     {   
@@ -71,7 +72,6 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     {
         StartCoroutine(GetResponse());
         audioSource.Play();
-        Debug.Log("LOADING 3D MODEL");
         messageText.text = "LOADING 3D MODEL";
     }   
         if(!string.IsNullOrEmpty(taskIdTexture)  && !isFetchingResponseTexture)
@@ -85,7 +85,6 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     public IEnumerator RequestObject()
     {   
         
-        Debug.Log("ENTERING REQUEST OBJECT TO THE API AREA");
         messageText.text = "ENTERING REQUEST OBJECT TO THE API AREA";
 
         var requestBody = new
@@ -103,13 +102,13 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
         using (UnityWebRequest request = new UnityWebRequest(modelEndpoint, "POST"))
         {
-            //byte[] bodyRaw = byteData;
+
             request.uploadHandler = new UploadHandlerRaw(byteData);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Authorization",$"Bearer {apiKey}");
             request.SetRequestHeader("Content-Type", "application/json");
 
-            Debug.Log("Sending request" +json);
+            //Debug.Log("Sending request" +json);
             messageText.text = "Sending request";
 
             // Send the request
@@ -246,7 +245,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                                 string metallicUrls = textureUrls[0]["metallic"];
                                 string roroughnessUrls = textureUrls[0]["roughness"];
                                 string normalUrls = textureUrls[0]["normal"];
-                            messageText.text = "Generating Texture";
+                                messageText.text = "Generating Texture";
                                 textureUrl = baseColorUrl;
                                 metallicUrl = metallicUrls;
                                 roughnessUrl = roroughnessUrls;
@@ -264,6 +263,13 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                             messageText.text = "Texture Not Ready Yet. Retrying...";
                         
                         }
+                        if(response.ContainsKey("status") && response["status"].ToString() == "FAILED") 
+                    {
+                        messageText.text = "Error Loading Texture Try Again";
+                        errorFlag = "TextureFailed";
+                        buttonGameobject.SetActive(true);
+                        break;
+                    }
                     
                 }
                     
@@ -277,7 +283,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     
 
 
-    // Checks, in intervals of 5 seconds, the state of the task given to Meshy API, if the Model is rendered, the URL to the glb file is retrieved and rendered in runtime
+    // Checks, in intervals of 10 seconds, the state of the task given to Meshy API, if the Model is rendered, the URL to the glb/fbx file is retrieved and rendered in runtime
     public IEnumerator GetResponse()
 {
     isFetchingResponse = true;
@@ -617,6 +623,11 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                 messageText.text = "Trying Load Model again!";
                 LoadModel();      
                 break;
+            case "TextureFailed":
+                messageText.text = "Trying Generate Texture again!";
+                RequestTexture();
+                break;
+            //More Case To Do If needed Implement Here
             default:
                 messageText.text = "Trying Generate Model again!";
                 GenerateModel();
