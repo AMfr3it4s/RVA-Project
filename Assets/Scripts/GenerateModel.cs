@@ -4,21 +4,12 @@ using UnityEngine;
 
 public class GenerateModel : MonoBehaviour
 {   
-    [SerializeField] private GameObject infoMenu;
+    [SerializeField] private GameObject prefabObject;
     // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    public void OnClickGenerate()
+       public void OnClickGenerate()
     {   
-        infoMenu.SetActive(true);
+        //infoMenu.SetActive(true);
+        Vector3 position = new Vector3 (0,0.5f,1f);
+        Instantiate(prefabObject, position, transform.rotation);
     }
 }

@@ -5,17 +5,12 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Text;
 using Newtonsoft.Json;
-using System.Threading.Tasks;
 using TMPro;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using TriLibCore;
-using LibTessDotNet;
 using CandyCoded.env;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime;
-
-
+using Meta.XR.MRUtilityKit.SceneDecorator;
 
 
 
@@ -36,13 +31,14 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     [SerializeField] private string roughnessUrl;
     [SerializeField] private string normalUrl;
     [Header("Reference to the Input Field")]
-    [SerializeField] private TMP_InputField inputField;
+    [SerializeField] private InputField inputField;
     [Header("Reference to the Interaction Prefab for every generated Model")]
     [SerializeField] private GameObject interactionPrefab;
     [Header("Reference to Error Handler Button")]
     [SerializeField] private GameObject buttonGameobject;
     [Header("Debug")]
     [SerializeField] private TextMeshProUGUI messageText;
+
     [SerializeField] private GameObject infoMenu;
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
@@ -61,9 +57,10 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     void Start()
     {
         apiPrompt = inputField.text;
-        //switch 1,2,3
+        //switch for the api keys 1,2,3
         env.variables.TryGetValue("API_KEY3", out apiKey);
-        //GenerateModel();
+       //GenerateModel(); //<---- Just For Debug Porpouse Later will be removed
+       
     }
     void Update()
     {   
@@ -73,7 +70,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         StartCoroutine(GetResponse());
         audioSource.Play();
         messageText.text = "LOADING 3D MODEL";
-    }   
+    }  
+        //Verified if API already ended the task of Generating the model afther that will generate the texture
         if(!string.IsNullOrEmpty(taskIdTexture)  && !isFetchingResponseTexture)
         {
             StartCoroutine(GetResponseTexture());
@@ -90,10 +88,13 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         var requestBody = new
         {
             mode = "preview",
-            prompt = objectPrompt , //Dinamicaly Pass the Input from the user change to apiPrompt latter || Mannualy change to objectPrompt
+            prompt = apiPrompt , //Dinamicaly Pass the Input from the user change to apiPrompt latter || Mannualy change to objectPrompt
             art_style = "realistic",
-            negative_prompt = "medium quality",
-            texture_richness = "medium"
+            negative_prompt = "low quality, simple",
+            texture_richness = "medium",
+            ai_model = "meshy-4",
+            target_polycount = 30000,
+            topology = "triangle",
         };
 
         string json = JsonConvert.SerializeObject(requestBody);
@@ -119,7 +120,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
             {
                 Debug.LogError("Error: " + request.error);
                 errorFlag = "Request Object";
-                buttonGameobject.SetActive(true);
+                messageText.text = "Error: " + request.error;
+                
             }
             else
             {
@@ -136,6 +138,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                 {
                     Debug.LogError("Error: 'result' field not found in the response.");
                     messageText.text = "Error: 'result' field not found in the response";
+                    buttonGameobject.SetActive(true);
                 }
             }
         }
@@ -151,12 +154,12 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         {
            //request body 
            model_url = previousModelUrl,
-           object_prompt = "realistic texture",
+           object_prompt = $"The Model is an {apiPrompt} make me a texture for it realistic", // To be Implemented to make this dynamic has the model is
            style_prompt = "realistic",
-           enable_original_uv = true,
+           enable_original_uv = false,
            enable_pbr = true,
-           resolution = "2048",
-           negative_prompt = "medium quality",
+           resolution = "1024",
+           negative_prompt = "low quality, low poly, single color",
         };
 
         string json = JsonConvert.SerializeObject(requestBody);
@@ -206,7 +209,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     {
      isFetchingResponseTexture = true;
 
-    //Loop to check if the API returned de taskId, runs every 10 seconds
+    //Loop to check if the API returned de taskId, runs every 10 seconds -> Needes to be tested the delay time meay not the ideal one
     while (!string.IsNullOrEmpty(taskIdTexture))
     {
         Debug.Log("Fetching response from Meshy...");
@@ -251,7 +254,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                                 roughnessUrl = roroughnessUrls;
                                 normalUrl = normalUrls;
                                 StartLoadingTextures();
-                                taskID = string.Empty;
+                                taskIdTexture = string.Empty;
                                 infoMenu.SetActive(false);
                                 audioSource.Stop();
                                 break;
@@ -325,7 +328,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
 
                     var textureUrls = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(response["texture_urls"].ToString());
 
-                        // Obtém a URL da textura (a primeira textura da lista)
+                        // Obtï¿½m a URL da textura (a primeira textura da lista)
 
 
                         //GLB MODEL URL DOWNLOAD
@@ -436,10 +439,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
             rb = generatedModel.AddComponent<Rigidbody>();
         }
         rb.useGravity = true;
-        rb.isKinematic = true;
+        rb.isKinematic = false;
         rb.mass = 20f;
-
-        
 
         // Add Collider
         messageText.text = "Applying Collider";
@@ -449,44 +450,107 @@ public class MeshyAPIModelGeneration : MonoBehaviour
             Debug.Log("MeshFilter not Found");
             return;
         }
-        Mesh mesh = meshFilter.sharedMesh;
+        BoxCollider boxCollider = generatedModel.GetComponent<BoxCollider>();
+            if (boxCollider == null)
+            {
+                boxCollider = generatedModel.AddComponent<BoxCollider>();
+            }
+            boxCollider.size = new Vector3(1.5f,2f,1.5f);
+            boxCollider.isTrigger = false;
+
+        /*
+        Mesh mesh = meshFilter.mesh;
         MeshCollider collider = generatedModel.GetComponent<MeshCollider>();
         if(collider == null)
         {
             collider = generatedModel.AddComponent<MeshCollider>();
         }
         collider.sharedMesh = mesh;
-        collider.convex = true;
-        collider.isTrigger = false;
+        collider.convex = false;
+        collider.isTrigger = false;*/
 
 
         // Add Grabbale Interaction for commands and hands
 
         //Attach GameObject Interaction To parent Object
-        messageText.text = "Applying Interaction";
-        GameObject interactionPrefabInstance = Instantiate(interactionPrefab, generatedModel.transform, worldPositionStays:false);
-        interactionPrefabInstance.transform.SetParent(generatedModel.transform, worldPositionStays: false);
 
-        var handGrabInteractable  = interactionPrefabInstance.GetComponent<HandGrabInteractable>();
-        if(handGrabInteractable != null)
+
+        var grabFreeTransform = generatedModel.GetComponent<GrabFreeTransformer>();        
+        // Change Constraints In Grab Free Transformer
+        if(grabFreeTransform ==null)
+        {   
+            grabFreeTransform = generatedModel.AddComponent<GrabFreeTransformer>();
+            var newScaleConstraints = new TransformerUtils.ScaleConstraints
         {
-            handGrabInteractable.enabled = true;
+            ConstraintsAreRelative = true, 
+            XAxis = new TransformerUtils.ConstrainedAxis
+            {
+                ConstrainAxis = true,
+                AxisRange = new TransformerUtils.FloatRange { Min = 0.5f, Max = 3.0f } 
+            },
+            YAxis = new TransformerUtils.ConstrainedAxis
+            {
+                ConstrainAxis = true,
+                AxisRange = new TransformerUtils.FloatRange { Min = 0.5f, Max = 3.0f } 
+            },
+            ZAxis = new TransformerUtils.ConstrainedAxis
+            {
+                ConstrainAxis = true,
+                AxisRange = new TransformerUtils.FloatRange { Min = 0.5f, Max = 3.0f } 
+            }
+        }; 
+        grabFreeTransform.InjectOptionalScaleConstraints(newScaleConstraints);
         }
-        var grabInteractable = interactionPrefabInstance.GetComponent<GrabInteractable>();
-        if(grabInteractable != null)
+
+
+        var grabbable = generatedModel.GetComponent<Grabbable>();
+        if (grabbable == null)
         {
-            grabInteractable.enabled = true;
+            grabbable = generatedModel.AddComponent<Grabbable>();
         }
+        grabbable.InjectOptionalRigidbody(rb);
+        grabbable.enabled = true;
+        grabbable.InjectOptionalTargetTransform(generatedModel.transform);
+        grabbable.InjectOptionalOneGrabTransformer(grabFreeTransform);
+        grabbable.InjectOptionalTwoGrabTransformer(grabFreeTransform);
         
-        interactionPrefabInstance.GetComponentInChildren<Grabbable>().InjectOptionalRigidbody(rb);
-        interactionPrefabInstance.GetComponentInChildren<HandGrabInteractable>().InjectRigidbody(rb);
-        interactionPrefabInstance.GetComponentInChildren<GrabInteractable>().InjectRigidbody(rb);
+
+        var handGrabInteractable = generatedModel.GetComponent<HandGrabInteractable>();
+        if (handGrabInteractable == null)
+        {
+            handGrabInteractable = generatedModel.AddComponent<HandGrabInteractable>();
+            handGrabInteractable.InjectRigidbody(rb);
+            handGrabInteractable.InjectOptionalPointableElement(grabbable);
+            handGrabInteractable.InjectSupportedGrabTypes(Oculus.Interaction.Grab.GrabTypeFlags.Pinch);
+            //handGrabInteractable.InjectPinchGrabRules()
+
+        }
+        handGrabInteractable.enabled = true;
+
+        var grabInteractable = generatedModel.GetComponent<GrabInteractable>();
+        if (grabInteractable == null)
+        {
+            grabInteractable = generatedModel.AddComponent<GrabInteractable>();
+            grabInteractable.InjectRigidbody(rb);
+            grabInteractable.InjectOptionalPointableElement(grabbable);
+        }
+        grabInteractable.enabled = true;
 
 
+        
+        
+        
         StartCoroutine(RequestTexture());
-        
+
+    }
 
 
+    private Constraint CreateConstraint()
+    {
+        Constraint constraint = new Constraint();
+        constraint.min = 0.5f;
+        constraint.max = 3.0f;
+        return constraint;
     }
 
     private void LoadModel() 
@@ -503,6 +567,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         StartCoroutine(LoadTextures());
     }
 
+
+    //Load The textures provided by AI, and assign them to the material of the model
     private IEnumerator LoadTextures()
     {
         Texture2D baseColorTexture = null;
@@ -510,7 +576,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         Texture2D roughnessTexture = null;
         Texture2D normalTexture = null;
 
-        
+        //Downlaod Every component of the material
         yield return StartCoroutine(DownloadTexture(textureUrl, texture => baseColorTexture = texture));
         yield return StartCoroutine(DownloadTexture(metallicUrl, texture => metallicTexture = texture));
         yield return StartCoroutine(DownloadTexture(roughnessUrl, texture => roughnessTexture = texture));
@@ -519,7 +585,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         
         if (baseColorTexture && metallicTexture && roughnessTexture && normalTexture)
         {
-            
+            //Attach Every component to the desinated spot
             Material newMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
             newMaterial.SetTexture("_BaseMap", baseColorTexture);      
             newMaterial.SetTexture("_MetallicGlossMap", metallicTexture); 
@@ -549,6 +615,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         }
     }
 
+    //Download Function For Textures Based on URL
     private IEnumerator DownloadTexture(string url, System.Action<Texture2D> onSuccess)
     {
         using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
@@ -600,7 +667,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         Debug.Log("Model Loaded");
         messageText.text = "Model Loaded";
         GameObject loadedModel = assetLoaderContext.RootGameObject;
-        loadedModel.transform.position = new Vector3(0, 0.5f, 1.5f);
+        loadedModel.transform.localScale = new Vector3 (0.5f, 0.5f, 0.5f);
+        loadedModel.transform.position = new Vector3(0, 1f, 1.5f);
         createdObjects.Add(loadedModel);
         AddHandInteraction(loadedModel);
 
@@ -636,6 +704,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         
     }
 
+    //When Something Happens Send a Message to the UI with the Flag Error
     public void OnButtonClickTry()
     {
         ErrorHandling(errorFlag);
@@ -643,4 +712,20 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         errorFlag = "";
     }
 
+    // On Click Button Submit Prompt To AI
+    public void OnSubtmitButtonClick(InputField inputFromUser)
+    {
+       string userInput = inputFromUser.text;
+
+    if (string.IsNullOrWhiteSpace(userInput))
+    {
+        Debug.Log("No Empty Fields");
+        return;
+    }
+
+    apiPrompt = userInput;
+    
+    inputFromUser.text = string.Empty;
+    }
+    
 }
