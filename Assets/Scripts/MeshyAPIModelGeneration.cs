@@ -52,7 +52,7 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     private string taskIdTexture = string.Empty;
     private bool isFetchingResponse = false;
     private bool isFetchingResponseTexture = false;
-    private List<GameObject> createdObjects = new List<GameObject>();
+    [SerializeField] private List<GameObject> createdObjects = new List<GameObject>();
 
     void Start()
     {
@@ -154,11 +154,11 @@ public class MeshyAPIModelGeneration : MonoBehaviour
         {
            //request body 
            model_url = previousModelUrl,
-           object_prompt = $"The Model is an {apiPrompt} make me a texture for it realistic", // To be Implemented to make this dynamic has the model is
+           object_prompt = $"The Model is an {apiPrompt} make me a texture for it realistic and multicolor", // To be Implemented to make this dynamic has the model is
            style_prompt = "realistic",
            enable_original_uv = false,
-           enable_pbr = true,
-           resolution = "1024",
+           enable_pbr = false,
+           resolution = "4096",
            negative_prompt = "low quality, low poly, single color",
         };
 
@@ -245,14 +245,8 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                             if (textureUrls != null && textureUrls.Count > 0 && textureUrls[0].ContainsKey("base_color"))
                             {
                                 string baseColorUrl = textureUrls[0]["base_color"];
-                                string metallicUrls = textureUrls[0]["metallic"];
-                                string roroughnessUrls = textureUrls[0]["roughness"];
-                                string normalUrls = textureUrls[0]["normal"];
                                 messageText.text = "Generating Texture";
                                 textureUrl = baseColorUrl;
-                                metallicUrl = metallicUrls;
-                                roughnessUrl = roroughnessUrls;
-                                normalUrl = normalUrls;
                                 StartLoadingTextures();
                                 taskIdTexture = string.Empty;
                                 infoMenu.SetActive(false);
@@ -571,28 +565,18 @@ public class MeshyAPIModelGeneration : MonoBehaviour
     //Load The textures provided by AI, and assign them to the material of the model
     private IEnumerator LoadTextures()
     {
-        Texture2D baseColorTexture = null;
-        Texture2D metallicTexture = null;
-        Texture2D roughnessTexture = null;
-        Texture2D normalTexture = null;
+       Texture2D baseColorTexture = null;
 
-        //Downlaod Every component of the material
+        // Download apenas a textura Base Map
         yield return StartCoroutine(DownloadTexture(textureUrl, texture => baseColorTexture = texture));
-        yield return StartCoroutine(DownloadTexture(metallicUrl, texture => metallicTexture = texture));
-        yield return StartCoroutine(DownloadTexture(roughnessUrl, texture => roughnessTexture = texture));
-        yield return StartCoroutine(DownloadTexture(normalUrl, texture => normalTexture = texture));
 
-        
-        if (baseColorTexture && metallicTexture && roughnessTexture && normalTexture)
+        if (baseColorTexture != null)
         {
-            //Attach Every component to the desinated spot
-            Material newMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            newMaterial.SetTexture("_BaseMap", baseColorTexture);      
-            newMaterial.SetTexture("_MetallicGlossMap", metallicTexture); 
-            newMaterial.SetTexture("_SpecGlossMap", roughnessTexture); 
-            newMaterial.SetTexture("_BumpMap", normalTexture);         
+            Material newMaterial = new Material(Shader.Find("Unlit/Texture"));
 
-            
+            // Define o Base Map no material
+            newMaterial.SetTexture("_BaseMap", baseColorTexture);
+
             if (createdObjects.Count > 0)
             {
                 GameObject loadedModel = createdObjects[createdObjects.Count - 1];
@@ -603,16 +587,17 @@ public class MeshyAPIModelGeneration : MonoBehaviour
                 }
             }
 
-            Debug.Log("All Textures Loaded and Applied");
-            messageText.text = "All Textures Loaded and Applied";
+            Debug.Log("Textura Base Map foi carregada e aplicada.");
+            messageText.text = "Textura Base Map foi carregada e aplicada.";
         }
         else
         {
-            Debug.LogError("Error While Loading One or More Textures");
-            messageText.text = "Error While Loading One or More Textures";
-            errorFlag = "Loading Textures";
+            Debug.LogError("Erro ao carregar a textura Base Map.");
+            messageText.text = "Erro ao carregar a textura Base Map.";
+            errorFlag = "Erro ao carregar textura Base Map";
             buttonGameobject.SetActive(true);
         }
+
     }
 
     //Download Function For Textures Based on URL
